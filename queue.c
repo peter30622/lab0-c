@@ -14,40 +14,92 @@
 /* Create an empty queue */
 struct list_head *q_new()
 {
-    return NULL;
+    struct list_head *head = malloc(sizeof(struct list_head));
+    INIT_LIST_HEAD(head);
+    return head;
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *l) {}
+void q_free(struct list_head *head)
+{
+    element_t *e1, *e2;
+    list_for_each_entry_safe (e1, e2, head, list)
+        q_release_element(e1);
+    free(head);
+}
 
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    size_t n = strlen(s);
+    element_t *e = malloc(sizeof(element_t));
+
+    list_add(&e->list, head);
+
+    e->value = malloc(sizeof(char) * (n + 1));
+    strncpy(e->value, s, n);
+    e->value[n] = '\0';
+    // cppcheck-suppress memleak
     return true;
 }
 
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
+    size_t n = strlen(s);
+    element_t *e = malloc(sizeof(element_t));
+
+    list_add_tail(&e->list, head);
+
+    e->value = malloc(sizeof(char) * (n + 1));
+    strncpy(e->value, s, n);
+    e->value[n] = '\0';
+    // cppcheck-suppress memleak
     return true;
 }
 
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    if (list_empty(head))
+        return NULL;
+
+    struct list_head *node = head->next;
+    list_del(node);
+
+    element_t *e = container_of(node, element_t, list);
+    strncpy(sp, e->value, bufsize - 1);
+    sp[bufsize - 1] = '\0';
+
+    return e;
 }
 
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    if (list_empty(head))
+        return NULL;
+
+    struct list_head *node = head->prev;
+    list_del(node);
+
+    element_t *e = container_of(node, element_t, list);
+    strncpy(sp, e->value, bufsize - 1);
+    sp[bufsize - 1] = '\0';
+
+    return e;
 }
 
 /* Return number of elements in queue */
 int q_size(struct list_head *head)
 {
-    return -1;
+    struct list_head *node;
+    int n = 0;
+
+    list_for_each (node, head)
+        n++;
+
+    return n;
 }
 
 /* Delete the middle node in queue */
@@ -71,7 +123,21 @@ void q_swap(struct list_head *head)
 }
 
 /* Reverse elements in queue */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    struct list_head *fw = head->next, *bw = head->prev;
+    while (fw != bw) {
+        char **fw_c = &(container_of(fw, element_t, list)->value);
+        char **bw_c = &(container_of(bw, element_t, list)->value);
+
+        void *tmp = *fw_c;
+        *fw_c = *bw_c;
+        *bw_c = tmp;
+
+        fw = fw->next;
+        bw = bw->prev;
+    }
+}
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
