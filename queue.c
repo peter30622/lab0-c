@@ -22,6 +22,9 @@ struct list_head *q_new()
 /* Free all storage used by queue */
 void q_free(struct list_head *head)
 {
+    if (!head)
+        return;
+
     element_t *e1, *e2;
     list_for_each_entry_safe (e1, e2, head, list)
         q_release_element(e1);
@@ -31,6 +34,9 @@ void q_free(struct list_head *head)
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+
     size_t n = strlen(s);
     element_t *e = malloc(sizeof(element_t));
 
@@ -46,6 +52,9 @@ bool q_insert_head(struct list_head *head, char *s)
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
+    if (!head)
+        return false;
+
     size_t n = strlen(s);
     element_t *e = malloc(sizeof(element_t));
 
@@ -61,7 +70,7 @@ bool q_insert_tail(struct list_head *head, char *s)
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (list_empty(head))
+    if (!head || list_empty(head))
         return NULL;
 
     struct list_head *node = head->next;
@@ -77,7 +86,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (list_empty(head))
+    if (!head || list_empty(head))
         return NULL;
 
     struct list_head *node = head->prev;
@@ -93,6 +102,9 @@ element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 /* Return number of elements in queue */
 int q_size(struct list_head *head)
 {
+    if (!head)
+        return 0;
+
     struct list_head *node;
     int n = 0;
 
@@ -125,6 +137,9 @@ void q_swap(struct list_head *head)
 /* Reverse elements in queue */
 void q_reverse(struct list_head *head)
 {
+    if (!head)
+        return;
+
     struct list_head *fw = head->next, *bw = head->prev;
     while (fw != bw) {
         char **fw_c = &(container_of(fw, element_t, list)->value);
