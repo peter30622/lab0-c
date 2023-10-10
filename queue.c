@@ -209,8 +209,39 @@ void q_reverseK(struct list_head *head, int k)
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
+static bool increase_fn(const char *s1, const char *s2)
+{
+    return strcmp(s1, s2) > 0;
+}
+
+static bool decrease_fn(const char *s1, const char *s2)
+{
+    return strcmp(s1, s2) < 0;
+}
+
 /* Sort elements of queue in ascending/descending order */
-void q_sort(struct list_head *head, bool descend) {}
+void q_sort(struct list_head *head, bool descend)
+{
+    if (!head)
+        return;
+
+    bool (*cmp)(const char *, const char *) =
+        descend ? &decrease_fn : &increase_fn;
+
+    int len = q_size(head);
+    element_t *e1, *e2;
+
+    while (len) {
+        list_for_each_entry_safe (e1, e2, head, list) {
+            if (&e2->list != head && cmp(e1->value, e2->value)) {
+                void *tmp = e1->value;
+                e1->value = e2->value;
+                e2->value = tmp;
+            }
+        }
+        len--;
+    }
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
