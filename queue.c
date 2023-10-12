@@ -301,10 +301,72 @@ int q_descend(struct list_head *head)
     return len;
 }
 
+static void merge(struct list_head *l1,
+                  struct list_head *l2,
+                  bool (*cmp)(const char *, const char *))
+{
+    struct list_head *tail = l1;
+    struct list_head *l1_head = l1, *l2_head = l2;
+
+    for (l1 = l1->next, l2 = l2->next;;) {
+        element_t *e1 = list_entry(l1, element_t, list);
+        element_t *e2 = list_entry(l2, element_t, list);
+
+        if (cmp(e1->value, e2->value)) {
+            // pick e1
+            tail->next = l1;
+            l1->prev = tail;
+
+            tail = tail->next;
+            l1 = l1->next;
+
+            if (l1 == l1_head) {
+                tail->next = l2;
+                l2->prev = tail;
+
+                l2_head->prev->next = l1_head;
+                l1_head->prev = l2_head->prev;
+                break;
+            }
+        } else {
+            // pick e2
+            tail->next = l2;
+            l2->prev = tail;
+
+            tail = tail->next;
+            l2 = l2->next;
+
+            if (l2 == l2_head) {
+                tail->next = l1;
+                l1->prev = tail;
+                break;
+            }
+        }
+    }
+
+    INIT_LIST_HEAD(l2_head);
+}
+
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */
 int q_merge(struct list_head *head, bool descend)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+
+    bool (*cmp)(const char *, const char *) =
+        descend ? &increase_fn : &decrease_fn;
+
+    queue_contex_t *q1, *q2;
+    list_for_each_entry_safe (q1, q2, head, chain)
+        if (&q2->chain != head)
+            merge(q2->q, q1->q, cmp);
+
+    q1 = list_entry(head->next, queue_contex_t, chain);
+    q2 = list_entry(head->prev, queue_contex_t, chain);
+
+    void *tmp = q1->q;
+    q1->q = q2->q;
+    q2->q = tmp;
+
+    return q_size(q1->q);
 }
