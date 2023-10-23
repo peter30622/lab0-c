@@ -207,6 +207,38 @@ void q_reverse(struct list_head *head)
 void q_reverseK(struct list_head *head, int k)
 {
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
+
+    if (!head)
+        return;
+
+    struct list_head *tail_l = head->next;  // including
+    struct list_head *tail_r = head->next;  // excluding
+    element_t *e1, *e2;
+    int i;
+
+    while (tail_r != head) {
+        for (i = 0; i < k && tail_r != head; i++)
+            tail_r = tail_r->next;
+
+        if (i < k)
+            break;
+
+        struct list_head *tail_r2 = tail_r->prev;
+
+        while (tail_l != tail_r2 && tail_l->prev != tail_r2) {
+            e1 = list_entry(tail_l, element_t, list);
+            e2 = list_entry(tail_r2, element_t, list);
+
+            void *tmp = e1->value;
+            e1->value = e2->value;
+            e2->value = tmp;
+
+            tail_l = tail_l->next;
+            tail_r2 = tail_r2->prev;
+        }
+
+        tail_l = tail_r;
+    }
 }
 
 static bool increase_fn(const char *s1, const char *s2)
