@@ -15,6 +15,9 @@
 struct list_head *q_new()
 {
     struct list_head *head = malloc(sizeof(struct list_head));
+    if (!head)
+        return NULL;
+
     INIT_LIST_HEAD(head);
     return head;
 }
@@ -39,10 +42,15 @@ bool q_insert_head(struct list_head *head, char *s)
 
     size_t n = strlen(s);
     element_t *e = malloc(sizeof(element_t));
+    if (!e)
+        return false;
 
     list_add(&e->list, head);
 
     e->value = malloc(sizeof(char) * (n + 1));
+    if (!e->value)
+        return false;
+
     strncpy(e->value, s, n);
     e->value[n] = '\0';
     // cppcheck-suppress memleak
@@ -57,10 +65,15 @@ bool q_insert_tail(struct list_head *head, char *s)
 
     size_t n = strlen(s);
     element_t *e = malloc(sizeof(element_t));
+    if (!e)
+        return false;
 
     list_add_tail(&e->list, head);
 
     e->value = malloc(sizeof(char) * (n + 1));
+    if (!e->value)
+        return false;
+
     strncpy(e->value, s, n);
     e->value[n] = '\0';
     // cppcheck-suppress memleak
