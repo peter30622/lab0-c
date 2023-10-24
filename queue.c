@@ -203,7 +203,7 @@ void q_reverse(struct list_head *head)
         return;
 
     struct list_head *fw = head->next, *bw = head->prev;
-    while (fw != bw) {
+    while (fw != bw && fw->prev != bw) {
         char **fw_c = &(container_of(fw, element_t, list)->value);
         char **bw_c = &(container_of(bw, element_t, list)->value);
 
