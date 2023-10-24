@@ -328,19 +328,19 @@ int q_descend(struct list_head *head)
 
     struct list_head *l1, *l2;
     element_t *e;
-    char *min_str = list_entry(head->prev, element_t, list)->value;
+    char *max_str = list_entry(head->prev, element_t, list)->value;
     int len = q_size(head);
 
     for (l1 = head->prev->prev, l2 = l1->prev; l1 != head;
          l1 = l2, l2 = l1->prev) {
         e = list_entry(l1, element_t, list);
 
-        if (strcmp(e->value, min_str) < 0) {
+        if (strcmp(e->value, max_str) < 0) {
             list_del_init(&e->list);
             q_release_element(e);
             len--;
         } else
-            min_str = e->value;
+            max_str = e->value;
     }
 
     return len;
