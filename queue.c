@@ -260,14 +260,16 @@ void q_reverseK(struct list_head *head, int k)
     }
 }
 
-static bool increase_fn(const char *s1, const char *s2)
+static int inc_fn(const struct list_head *a, const struct list_head *b)
 {
-    return strcmp(s1, s2) > 0;
+    return strcmp(list_entry(a, element_t, list)->value,
+                  list_entry(b, element_t, list)->value);
 }
 
-static bool decrease_fn(const char *s1, const char *s2)
+static int dec_fn(const struct list_head *a, const struct list_head *b)
 {
-    return strcmp(s1, s2) < 0;
+    return -strcmp(list_entry(a, element_t, list)->value,
+                   list_entry(b, element_t, list)->value);
 }
 
 /* Sort elements of queue in ascending/descending order */
@@ -276,15 +278,15 @@ void q_sort(struct list_head *head, bool descend)
     if (!head)
         return;
 
-    bool (*cmp)(const char *, const char *) =
-        descend ? &decrease_fn : &increase_fn;
+    int (*cmp)(const struct list_head *, const struct list_head *) =
+        descend ? &dec_fn : &inc_fn;
 
     int len = q_size(head);
     element_t *e1, *e2;
 
     while (len) {
         list_for_each_entry_safe (e1, e2, head, list) {
-            if (&e2->list != head && cmp(e1->value, e2->value)) {
+            if (&e2->list != head && cmp(&e1->list, &e2->list) > 0) {
                 void *tmp = e1->value;
                 e1->value = e2->value;
                 e2->value = tmp;
@@ -354,16 +356,14 @@ int q_descend(struct list_head *head)
 
 static void merge(struct list_head *l1,
                   struct list_head *l2,
-                  bool (*cmp)(const char *, const char *))
+                  int (*cmp)(const struct list_head *,
+                             const struct list_head *))
 {
     struct list_head *tail = l1;
     struct list_head *l1_head = l1, *l2_head = l2;
 
     for (l1 = l1->next, l2 = l2->next;;) {
-        element_t *e1 = list_entry(l1, element_t, list);
-        element_t *e2 = list_entry(l2, element_t, list);
-
-        if (cmp(e1->value, e2->value)) {
+        if (cmp(l1, l2) <= 0) {
             // pick e1
             tail->next = l1;
             l1->prev = tail;
@@ -404,8 +404,8 @@ int q_merge(struct list_head *head, bool descend)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
 
-    bool (*cmp)(const char *, const char *) =
-        descend ? &increase_fn : &decrease_fn;
+    int (*cmp)(const struct list_head *, const struct list_head *) =
+        descend ? &dec_fn : &inc_fn;
 
     queue_contex_t *q1, *q2;
     list_for_each_entry_safe (q1, q2, head, chain)
