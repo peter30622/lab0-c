@@ -272,6 +272,89 @@ static int dec_fn(const struct list_head *a, const struct list_head *b)
                    list_entry(b, element_t, list)->value);
 }
 
+static struct list_head *_q_merge(struct list_head *a,
+                                  struct list_head *b,
+                                  int (*cmp)(const struct list_head *,
+                                             const struct list_head *))
+{
+    struct list_head *head, **tail = &head, *curr = NULL;
+
+    a->prev->next = NULL;
+    a->prev = NULL;
+
+    b->prev->next = NULL;
+    b->prev = NULL;
+
+    for (;;) {
+        /* pick a */
+        if (cmp(a, b) <= 0) {
+            a->prev = curr;
+            curr = a;
+
+            *tail = a;
+            tail = &a->next;
+
+            a = a->next;
+            if (!a) {
+                b->prev = curr;
+                *tail = b;
+                break;
+            }
+        } else {
+            b->prev = curr;
+            curr = b;
+
+            *tail = b;
+            tail = &b->next;
+
+            b = b->next;
+            if (!b) {
+                a->prev = curr;
+                *tail = a;
+                break;
+            }
+        }
+    }
+
+    while (curr->next)
+        curr = curr->next;
+
+    head->prev = curr;
+    curr->next = head;
+
+    return head;
+}
+
+static struct list_head *_find_mid(struct list_head *p, struct list_head *n)
+{
+    while (p != n && p != n->next) {
+        p = p->prev;
+        n = n->next;
+    }
+    return n;
+}
+
+static struct list_head *_q_sort(struct list_head *head,
+                                 int (*cmp)(const struct list_head *,
+                                            const struct list_head *))
+{
+    if (list_empty(head))
+        return head;
+
+    struct list_head *tail = head->prev;
+    struct list_head *mid = _find_mid(tail, head);
+
+    tail->next = mid->next;
+    mid->next->prev = tail;
+
+    head->prev = mid;
+    mid->next = head;
+
+    struct list_head *a = _q_sort(head, cmp);
+    struct list_head *b = _q_sort(tail, cmp);
+    return _q_merge(a, b, cmp);
+}
+
 /* Sort elements of queue in ascending/descending order */
 void q_sort(struct list_head *head, bool descend)
 {
@@ -281,19 +364,9 @@ void q_sort(struct list_head *head, bool descend)
     int (*cmp)(const struct list_head *, const struct list_head *) =
         descend ? &dec_fn : &inc_fn;
 
-    int len = q_size(head);
-    element_t *e1, *e2;
-
-    while (len) {
-        list_for_each_entry_safe (e1, e2, head, list) {
-            if (&e2->list != head && cmp(&e1->list, &e2->list) > 0) {
-                void *tmp = e1->value;
-                e1->value = e2->value;
-                e2->value = tmp;
-            }
-        }
-        len--;
-    }
+    struct list_head *q = head->next;
+    list_del(head);
+    list_add_tail(head, _q_sort(q, cmp));
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
