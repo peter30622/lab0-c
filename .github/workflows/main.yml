@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   lab0-c:
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v3.3.0
     - uses: webfactory/ssh-agent@v0.7.0
@@ -31,7 +31,7 @@ jobs:
             cat scripts/pikachu.raw
 
   coding-style:
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v3.3.0
     - name: coding convention
